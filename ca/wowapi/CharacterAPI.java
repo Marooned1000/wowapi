@@ -20,6 +20,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import ca.wowapi.entities.Achievement;
 import ca.wowapi.entities.Character;
 import ca.wowapi.entities.Realm;
 import ca.wowapi.exceptions.CharacterNotFoundException;

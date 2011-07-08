@@ -14,6 +14,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import ca.wowapi.entities.Achievement;
 import ca.wowapi.entities.Guild;
 import ca.wowapi.entities.Realm;
 import ca.wowapi.exceptions.CharacterNotFoundException;

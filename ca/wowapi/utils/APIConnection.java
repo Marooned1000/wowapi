@@ -46,7 +46,7 @@ public class APIConnection {
 		return str;
 	}
 
-	public static String getStringJSONFromRequestAuth (String url, String cat, String mouse)
+	public static String getStringJSONFromRequestAuth (String url, String publicKey, String privateKey)
 	{
 		String UrlPath = url.substring(url.indexOf("/api"), url.indexOf("?"));
 		String str = null;
@@ -64,9 +64,9 @@ public class APIConnection {
 			String stringToSign = urlConnection.getRequestMethod() + "\n" +
 			dateStr + "\n" +
 			UrlPath + "\n";		
-			String sig = generateHmacSHA1Signature (stringToSign, mouse);
+			String sig = generateHmacSHA1Signature (stringToSign, privateKey);
 			try {
-				urlConnection.setRequestProperty("Authorization", "BNET" + " " + cat +":"+ sig);
+				urlConnection.setRequestProperty("Authorization", "BNET" + " " + publicKey +":"+ sig);
 				urlConnection.setRequestProperty("Date",dateStr);
 			} catch (IllegalStateException e)
 			{

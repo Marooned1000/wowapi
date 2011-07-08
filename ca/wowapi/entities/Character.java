@@ -3,7 +3,6 @@ package ca.wowapi.entities;
 import java.util.ArrayList;
 import java.util.List;
 
-import ca.wowapi.Achievement;
 
 public class Character {
 	

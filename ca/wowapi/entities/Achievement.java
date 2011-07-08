@@ -1,4 +1,4 @@
-package ca.wowapi;
+package ca.wowapi.entities;
 
 public class Achievement {
 	

@@ -3,7 +3,6 @@ package ca.wowapi.entities;
 import java.io.Serializable;
 import java.util.List;
 
-import ca.wowapi.Achievement;
 
 public class Guild implements Serializable
 {
