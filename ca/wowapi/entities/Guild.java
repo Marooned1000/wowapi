@@ -6,6 +6,27 @@ import java.util.List;
 
 public class Guild implements Serializable
 {
+	String name;
+	String realm;
+	String region;
+	int points;
+	int level;
+	String faction;
+	List<Achievement> achievements;
+	List<Achievement> criteria;
+	java.sql.Timestamp lastmodified;
+	
+	public Guild ()
+	{
+		name = "";
+		realm = "";
+		region = "";
+		faction = "";
+		points = 0;
+		level = 0;
+		lastmodified = null;
+	}
+	
 	public String getName() {
 		return name;
 	}
@@ -48,31 +69,19 @@ public class Guild implements Serializable
 	public void setAchievements(List<Achievement> achievements) {
 		this.achievements = achievements;
 	}
-	public java.sql.Date getLastmodified() {
+	public java.sql.Timestamp getLastmodified() {
 		return lastmodified;
 	}
-	public void setLastmodified(java.sql.Date lastmodified) {
+	public void setLastmodified(java.sql.Timestamp lastmodified) {
 		this.lastmodified = lastmodified;
 	}
-	String name;
-	String realm;
-	String region;
-	int points;
-	int level;
-	String faction;
-	List<Achievement> achievements;
-	java.sql.Date lastmodified;
-	
-	public Guild ()
-	{
-		name = "";
-		realm = "";
-		region = "";
-		faction = "";
-		points = 0;
-		level = 0;
-		lastmodified = null;
+	public List<Achievement> getCriteria() {
+		return criteria;
 	}
+	public void setCriteria(List<Achievement> criteria) {
+		this.criteria = criteria;
+	}
+	
 	public String toString ()
 	{
 		return  name + "," + realm + "," + region + "," + points + "," + level + "," + faction + "," + lastmodified;

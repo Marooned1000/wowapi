@@ -8,18 +8,27 @@ import ca.wowapi.entities.Realm;
 import ca.wowapi.exceptions.CharacterNotFoundException;
 import ca.wowapi.exceptions.GuildNotFoundException;
 import ca.wowapi.exceptions.InvalidApplicationSignatureException;
+import ca.wowapi.exceptions.NotModifiedException;
 import ca.wowapi.exceptions.ServerUnavailableException;
+import ca.wowapi.exceptions.TooManyRequestsException;
 
 import java.util.List;
+
+import com.wowgearup.miner.utils.AchievementTools;
 
 public class Test {
 
 	public static void main(String[] args) {
 		
-		CharacterAPI charAPI = new CharacterAPI(true,"publickey","privatekey");
+		CharacterAPI charAPI = new CharacterAPI();
 		try {
-			Character character = charAPI.getCharacterAllInfo("Tme","Khadgar","us");
+			Character character = charAPI.getCharacterAllInfo("Androomeeda","Ravencrest","eu",0);
 			System.out.println(character);
+			(new AchievementTools()).achievementNormalize(character);	
+			for (int i = 0; i < character.getAchievements().size(); i++)
+				if (character.getAchievements().get(i).getAid() == 116305)
+					System.out.println(character.getAchievements().get(i).getCriteriaQuantity());
+				
 		} catch (CharacterNotFoundException e) {
 			System.out.println("notfound");
 		} catch (ServerUnavailableException e) {
@@ -27,14 +36,19 @@ public class Test {
 			e.printStackTrace();
 		} catch (InvalidApplicationSignatureException e) {
 			System.out.println("signature wrong");
+		} catch (TooManyRequestsException e) {
+			// TODO Auto-generated catch block
 			e.printStackTrace();
+		} catch (NotModifiedException e) {
+			// TODO Auto-generated catch block
+			System.out.println("Not Modified");
 		}
 		
-	
 		
-		GuildAPI guildAPI = new GuildAPI(true,"publickey","privatekey");
+	
+		GuildAPI guildAPI = new GuildAPI();
 		try {
-			Guild guild = guildAPI.getGuildAllInfo("shattered dreams","ravencrest","eu");
+			Guild guild = guildAPI.getGuildAllInfo("shattered dreams","ravencrest","eu",0);
 			System.out.println(guild);
 		} catch (ServerUnavailableException e) {
 			e.printStackTrace();
@@ -42,7 +56,12 @@ public class Test {
 			e.printStackTrace();
 		} catch (InvalidApplicationSignatureException e) {
 			System.out.println("signature wrong");
+		} catch (TooManyRequestsException e) {
+			// TODO Auto-generated catch block
 			e.printStackTrace();
+		} catch (NotModifiedException e) {
+			// TODO Auto-generated catch block
+			System.out.println("Not Modified");
 		}
 		
 		RealmAPI realmAPI = new RealmAPI ("us");
@@ -51,5 +70,6 @@ public class Test {
 		System.out.println(r);
 		List<Realm> list = realmAPI.getRealmList();
 		System.out.println(list.get(5));
+		
 	}
 }

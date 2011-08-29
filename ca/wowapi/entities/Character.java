@@ -7,6 +7,38 @@ import java.util.List;
 public class Character {
 	
 	String name;
+	String cclass;
+	String faction;
+	String gender;
+	String race;
+	int points;
+	int level;
+	String guildname;
+	String realm;
+	String region;
+	java.sql.Date lastmodified;
+	int ilvl;
+	List<Achievement> achievements;
+	List<Achievement> criteria;
+	
+	public Character ()
+	{
+		name = "";
+		cclass = "";
+		faction = "";
+		gender = "";
+		race = "";
+		points = 0;
+		level = 0;
+		guildname = "";	
+		realm = "";
+		region = "";
+		lastmodified = null;
+		ilvl = 0;
+		achievements = null;
+	}
+	
+	
 	public String getName() {
 		return name;
 	}
@@ -110,36 +142,13 @@ public class Character {
 	public void setAchievements(List<Achievement> achievements) {
 		this.achievements = achievements;
 	}
+	
+	public List<Achievement> getCriteria() {
+		return criteria;
+	}
 
-	String cclass;
-	String faction;
-	String gender;
-	String race;
-	int points;
-	int level;
-	String guildname;
-	String realm;
-	String region;
-	java.sql.Date lastmodified;
-	int ilvl;
-	List<Achievement> achievements;
-	
-	
-	public Character ()
-	{
-		name = "";
-		cclass = "";
-		faction = "";
-		gender = "";
-		race = "";
-		points = 0;
-		level = 0;
-		guildname = "";	
-		realm = "";
-		region = "";
-		lastmodified = null;
-		ilvl = 0;
-		achievements = null;
+	public void setCriteria(List<Achievement> criteria) {
+		this.criteria = criteria;
 	}
 	
 	public String toString ()

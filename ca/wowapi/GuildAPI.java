@@ -14,19 +14,20 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import com.wowgearup.miner.utils.Constants;
+
 import ca.wowapi.entities.Achievement;
 import ca.wowapi.entities.Guild;
 import ca.wowapi.entities.Realm;
 import ca.wowapi.exceptions.CharacterNotFoundException;
 import ca.wowapi.exceptions.GuildNotFoundException;
 import ca.wowapi.exceptions.InvalidApplicationSignatureException;
+import ca.wowapi.exceptions.NotModifiedException;
 import ca.wowapi.exceptions.ServerUnavailableException;
+import ca.wowapi.exceptions.TooManyRequestsException;
 import ca.wowapi.utils.APIConnection;
 
 public class GuildAPI {
-
-
-	String URL = "http://%region.battle.net/api/wow/guild/%realm/%name?fields=achievements";
 	
 	private String cat;
 	private String mouse;
@@ -68,15 +69,15 @@ public class GuildAPI {
 	{
 	}
 
-	public JSONObject getJSONFromRequest (String url) 
+	public JSONObject getJSONFromRequest (String url, long lastModified) throws NotModifiedException 
 	{	
 		JSONObject jsonobject;
 
 		String str = null;
 		if (authenticate)
-			str = APIConnection.getStringJSONFromRequestAuth(url, cat, mouse);
+			str = APIConnection.getStringJSONFromRequestAuth(url, cat, mouse, lastModified);
 		else		
-			str = APIConnection.getStringJSONFromRequest(url);
+			str = APIConnection.getStringJSONFromRequest(url, lastModified);
 
 		try {
 			jsonobject = new JSONObject(str);
@@ -88,8 +89,9 @@ public class GuildAPI {
 	}
 
 
-	public Guild getGuildAllInfo (String name, String realm, String region) throws ServerUnavailableException, GuildNotFoundException, InvalidApplicationSignatureException
+	public Guild getGuildAllInfo (String name, String realm, String region, long lastModified) throws ServerUnavailableException, GuildNotFoundException, InvalidApplicationSignatureException, TooManyRequestsException, NotModifiedException
 	{
+		String URL = "http://%region.battle.net/api/wow/guild/%realm/%name?fields=achievements";
 		try {
 			name = URIUtil.encodePath(name,"UTF-8");
 			realm = URIUtil.encodePath(realm,"UTF-8");
@@ -100,7 +102,7 @@ public class GuildAPI {
 		String finalURL = URL.replace("%region", region).replace("%realm", realm).replace("%name", name);
 		Guild guild = new Guild();		
 		try {
-			JSONObject jsonobject = getJSONFromRequest (finalURL);
+			JSONObject jsonobject = getJSONFromRequest (finalURL, lastModified);
 			JSONArray jarrayAchievementsCompleted,jarrayAchievementsCompletedTimestamp,jarrayCriteria,jarrayCriteriaQuantity,jarrayCriteriaTimestamp;
 
 			if (jsonobject == null) throw new ServerUnavailableException();
@@ -113,17 +115,29 @@ public class GuildAPI {
 					} else if (jsonobject.getString ("reason").equalsIgnoreCase("Invalid application signature."))
 					{
 						throw new InvalidApplicationSignatureException();
+					} else if (jsonobject.getString ("reason").contains("too many requests") || jsonobject.getString ("reason").contains("Daily limit exceeded"))
+					{
+						throw new TooManyRequestsException();
 					} else {
-						throw new GuildNotFoundException();
+						throw new ServerUnavailableException();
 					}
 				}
 			} catch (JSONException e) {};
+			
+			if (region.equalsIgnoreCase("us"))
+				Constants.numberOfAllGuildRequestsUS++;
+			else if (region.equalsIgnoreCase("eu"))
+				Constants.numberOfAllGuildRequestsEU++;
 			
 			guild.setName(jsonobject.getString("name"));
 			guild.setRealm(jsonobject.getString("realm"));
 			guild.setRegion(region);
 			guild.setLevel(jsonobject.getInt("level"));
 			guild.setPoints(jsonobject.getInt("achievementPoints"));
+			guild.setLastmodified(new java.sql.Timestamp(jsonobject.getLong("lastModified")));
+			
+			if (jsonobject.getInt("side") == 0) guild.setFaction("Alliance"); 
+			else if (jsonobject.getInt("side") == 1) guild.setFaction("Horde"); 
 			
 			jarrayAchievementsCompleted = jsonobject.getJSONObject("achievements").getJSONArray("achievementsCompleted");
 			jarrayAchievementsCompletedTimestamp = jsonobject.getJSONObject("achievements").getJSONArray("achievementsCompletedTimestamp");
@@ -139,9 +153,12 @@ public class GuildAPI {
 				achievemenet.setAid(jarrayAchievementsCompleted.getInt(i));
 				achievemenet.setTimestamp(jarrayAchievementsCompletedTimestamp.getLong(i));
 				achievemenet.setCompleted(true);
+				achievemenet.setCriteriaQuantity(1);
 				achievementList.add(achievemenet);
 			}
+			guild.setAchievements(achievementList);
 			
+			achievementList = new ArrayList<Achievement>(); 
 			for (int i = 0; i < jarrayCriteria.length();i++)
 			{
 				Achievement achievemenet = new Achievement();
@@ -151,8 +168,63 @@ public class GuildAPI {
 				achievemenet.setCompleted(false);
 				achievementList.add(achievemenet);
 			}
+			guild.setCriteria(achievementList);
 			
-			guild.setAchievements(achievementList);
+			return guild;
+
+		} catch (JSONException e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+	
+	public Guild getGuildBasicInfo (String name, String realm, String region, long lastModified) throws ServerUnavailableException, GuildNotFoundException, InvalidApplicationSignatureException, TooManyRequestsException, NotModifiedException
+	{
+		String URL = "http://%region.battle.net/api/wow/guild/%realm/%name";
+		try {
+			name = URIUtil.encodePath(name,"UTF-8");
+			realm = URIUtil.encodePath(realm,"UTF-8");
+		} catch (URIException e) {
+			e.printStackTrace();
+		}		
+		
+		String finalURL = URL.replace("%region", region).replace("%realm", realm).replace("%name", name);
+		Guild guild = new Guild();		
+		try {
+			JSONObject jsonobject = getJSONFromRequest (finalURL, lastModified);
+
+			if (jsonobject == null) throw new ServerUnavailableException();
+			try {
+				if (jsonobject.getString ("status").equalsIgnoreCase("nok"))
+				{
+					if (jsonobject.getString ("reason").equalsIgnoreCase("Character not found."))
+					{
+						throw new GuildNotFoundException();
+					} else if (jsonobject.getString ("reason").equalsIgnoreCase("Invalid application signature."))
+					{
+						throw new InvalidApplicationSignatureException();
+					} else if (jsonobject.getString ("reason").contains("too many requests") || jsonobject.getString ("reason").contains("Daily limit exceeded"))
+					{
+						throw new TooManyRequestsException();
+					} else {
+						throw new ServerUnavailableException();
+					}
+				}
+			} catch (JSONException e) {};
+			
+			if (region.equalsIgnoreCase("us"))
+				Constants.numberOfBasicGuildRequestsUS++;
+			else if (region.equalsIgnoreCase("eu"))
+				Constants.numberOfBasicGuildRequestsEU++;
+			
+			guild.setName(jsonobject.getString("name"));
+			guild.setRealm(jsonobject.getString("realm"));
+			guild.setRegion(region);
+			guild.setLevel(jsonobject.getInt("level"));
+			guild.setPoints(jsonobject.getInt("achievementPoints"));
+			
+			if (jsonobject.getInt("side") == 0) guild.setFaction("Alliance"); 
+			else if (jsonobject.getInt("side") == 1) guild.setFaction("Horde"); 
 			
 			return guild;
 

@@ -20,14 +20,14 @@ public class Achievement {
 	public void setTimestamp(long timestamp) {
 		this.timestamp = timestamp;
 	}
-	public int getCriteriaQuantity() {
+	public long getCriteriaQuantity() {
 		return criteriaQuantity;
 	}
-	public void setCriteriaQuantity(int criteriaQuantity) {
+	public void setCriteriaQuantity(long criteriaQuantity) {
 		this.criteriaQuantity = criteriaQuantity;
 	}
 	int aid;
 	boolean completed;
 	long timestamp;
-	int criteriaQuantity;
+	long criteriaQuantity;
 }

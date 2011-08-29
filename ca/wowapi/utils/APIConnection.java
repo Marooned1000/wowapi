@@ -13,20 +13,26 @@ import java.util.TimeZone;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
+import ca.wowapi.exceptions.NotModifiedException;
+
 public class APIConnection {
 
-	public static String getStringJSONFromRequest (String url)
+	public static String getStringJSONFromRequest (String url,  long lastModified) throws NotModifiedException
 	{
 		String str = null;
 		try {
 			URL jURL = new URL(url);
 			HttpURLConnection urlConnection;
 			urlConnection = (HttpURLConnection) jURL.openConnection();
+			
+			if (lastModified != 0) urlConnection.setIfModifiedSince(lastModified);
 
 			final char[] buffer = new char[0x1000];
 			StringBuilder out = new StringBuilder();
 			Reader in = null;
-			if (urlConnection.getResponseCode() < 400)
+			if (urlConnection.getResponseCode() == 304)
+				throw new NotModifiedException();
+			else if (urlConnection.getResponseCode() < 400)
 				in = new InputStreamReader(urlConnection.getInputStream(), "UTF-8");
 			else 
 				in = new InputStreamReader(urlConnection.getErrorStream(), "UTF-8");
@@ -46,9 +52,13 @@ public class APIConnection {
 		return str;
 	}
 
-	public static String getStringJSONFromRequestAuth (String url, String publicKey, String privateKey)
+	public static String getStringJSONFromRequestAuth (String url, String publicKey, String privateKey, long lastModified) throws NotModifiedException
 	{
-		String UrlPath = url.substring(url.indexOf("/api"), url.indexOf("?"));
+		String UrlPath = null;
+		if (url.contains("?"))
+			UrlPath = url.substring(url.indexOf("/api"), url.indexOf("?"));
+		else 
+			UrlPath = url.substring(url.indexOf("/api"));
 		String str = null;
 		try {		
 			URL jURL = new URL(url);
@@ -68,6 +78,7 @@ public class APIConnection {
 			try {
 				urlConnection.setRequestProperty("Authorization", "BNET" + " " + publicKey +":"+ sig);
 				urlConnection.setRequestProperty("Date",dateStr);
+				if (lastModified != 0) urlConnection.setIfModifiedSince(lastModified);
 			} catch (IllegalStateException e)
 			{
 				e.printStackTrace();
@@ -76,7 +87,9 @@ public class APIConnection {
 			final char[] buffer = new char[0x1000];
 			StringBuilder out = new StringBuilder();
 			Reader in = null;
-			if (urlConnection.getResponseCode() < 400)
+			if (urlConnection.getResponseCode() == 304)
+				throw new NotModifiedException();
+			else if (urlConnection.getResponseCode() < 400)
 				in = new InputStreamReader(urlConnection.getInputStream(), "UTF-8");
 			else 
 				in = new InputStreamReader(urlConnection.getErrorStream(), "UTF-8");
