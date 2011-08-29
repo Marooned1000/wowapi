@@ -22,7 +22,7 @@ public class Test {
 		
 		CharacterAPI charAPI = new CharacterAPI();
 		try {
-			Character character = charAPI.getCharacterAllInfo("Androomeeda","Ravencrest","eu",0);
+			Character character = charAPI.getCharacterAllInfo("Crsader","Ravencrest","eu",0);
 			System.out.println(character);
 			(new AchievementTools()).achievementNormalize(character);	
 			for (int i = 0; i < character.getAchievements().size(); i++)
@@ -48,7 +48,7 @@ public class Test {
 	
 		GuildAPI guildAPI = new GuildAPI();
 		try {
-			Guild guild = guildAPI.getGuildAllInfo("shattered dreams","ravencrest","eu",0);
+			Guild guild = guildAPI.getGuildAllInfo("Borked","ravencrest","eu",0);
 			System.out.println(guild);
 		} catch (ServerUnavailableException e) {
 			e.printStackTrace();
