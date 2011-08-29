@@ -89,7 +89,7 @@ public class AuctionAPI {
 			ArrayList<AuctionItem> auctionItemList = (ArrayList<AuctionItem>) getAllAuctionInfo ("ravencrest","eu");
 			for (int i = 0; i < auctionItemList.size(); i++)
 			{
-				if (auctionItemList.get(i).owner.equalsIgnoreCase("androomeeda"))
+				if (auctionItemList.get(i).owner.equalsIgnoreCase("shoman"))
 				{
 					System.out.println(auctionItemList.get(i));
 				}
