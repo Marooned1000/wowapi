@@ -128,8 +128,8 @@ public class CharacterAPI {
 		genderList.put (1, "Female");
 
 		try {
-			name = java.net.URLEncoder.encode(name,"UTF-8");
-			realm = java.net.URLEncoder.encode(realm,"UTF-8");
+			name = java.net.URLEncoder.encode(name,"UTF-8").replace("+", "%20");
+			realm = java.net.URLEncoder.encode(realm,"UTF-8").replace("+", "%20");
 		} catch (UnsupportedEncodingException e1) {
 			e1.printStackTrace();
 		}	
@@ -292,8 +292,8 @@ public class CharacterAPI {
 
 
 		try {
-			name = java.net.URLEncoder.encode(name,"UTF-8");
-			realm = java.net.URLEncoder.encode(realm,"UTF-8");
+			name = java.net.URLEncoder.encode(name,"UTF-8").replace("+", "%20");
+			realm = java.net.URLEncoder.encode(realm,"UTF-8").replace("+", "%20");
 		} catch (UnsupportedEncodingException e1) {
 			e1.printStackTrace();
 		}

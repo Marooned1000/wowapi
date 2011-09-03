@@ -17,7 +17,7 @@ import java.util.List;
 public class Test {
 
 	public static void main(String[] args) {
-		
+
 		CharacterAPI charAPI = new CharacterAPI();
 		try {
 			Character character = charAPI.getCharacterAllInfo("Crsader","Ravencrest","eu",0);
@@ -42,11 +42,10 @@ public class Test {
 			System.out.println("Not Modified");
 		}
 		
-		
 	
 		GuildAPI guildAPI = new GuildAPI();
 		try {
-			Guild guild = guildAPI.getGuildAllInfo("Borked","ravencrest","eu",0);
+			Guild guild = guildAPI.getGuildAllInfo("Alterac Deviants","ravencrest","eu",0);
 			System.out.println(guild);
 		} catch (ServerUnavailableException e) {
 			e.printStackTrace();
@@ -61,7 +60,7 @@ public class Test {
 			// TODO Auto-generated catch block
 			System.out.println("Not Modified");
 		}
-		
+	
 		RealmAPI realmAPI = new RealmAPI ("us");
 		realmAPI.setRegion("eu");
 		Realm r = realmAPI.getRealmByName("ravEncrest");

@@ -91,8 +91,8 @@ public class GuildAPI {
 		String URL = "http://%region.battle.net/api/wow/guild/%realm/%name?fields=achievements";
 
 		try {
-			name = java.net.URLEncoder.encode(name,"UTF-8");
-			realm = java.net.URLEncoder.encode(realm,"UTF-8");
+			name = java.net.URLEncoder.encode(name,"UTF-8").replace("+", "%20");
+			realm = java.net.URLEncoder.encode(realm,"UTF-8").replace("+", "%20");
 		} catch (UnsupportedEncodingException e1) {
 			e1.printStackTrace();
 		}
@@ -107,7 +107,7 @@ public class GuildAPI {
 			try {
 				if (jsonobject.getString ("status").equalsIgnoreCase("nok"))
 				{
-					if (jsonobject.getString ("reason").equalsIgnoreCase("Character not found."))
+					if (jsonobject.getString ("reason").equalsIgnoreCase("Guild not found."))
 					{
 						throw new GuildNotFoundException();
 					} else if (jsonobject.getString ("reason").equalsIgnoreCase("Invalid application signature."))
@@ -175,8 +175,8 @@ public class GuildAPI {
 	{
 		String URL = "http://%region.battle.net/api/wow/guild/%realm/%name";
 		try {
-			name = java.net.URLEncoder.encode(name,"UTF-8");
-			realm = java.net.URLEncoder.encode(realm,"UTF-8");
+			name = java.net.URLEncoder.encode(name,"UTF-8").replace("+", "%20");
+			realm = java.net.URLEncoder.encode(realm,"UTF-8").replace("+", "%20");
 		} catch (UnsupportedEncodingException e1) {
 			e1.printStackTrace();
 		}	
