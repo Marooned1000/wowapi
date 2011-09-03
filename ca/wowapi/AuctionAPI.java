@@ -8,8 +8,6 @@ import java.util.List;
 import java.net.URL;
 import java.net.URLConnection;
 
-import org.apache.commons.httpclient.URIException;
-import org.apache.commons.httpclient.util.URIUtil;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;

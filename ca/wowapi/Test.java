@@ -14,8 +14,6 @@ import ca.wowapi.exceptions.TooManyRequestsException;
 
 import java.util.List;
 
-import com.wowgearup.miner.utils.AchievementTools;
-
 public class Test {
 
 	public static void main(String[] args) {
@@ -24,7 +22,7 @@ public class Test {
 		try {
 			Character character = charAPI.getCharacterAllInfo("Crsader","Ravencrest","eu",0);
 			System.out.println(character);
-			(new AchievementTools()).achievementNormalize(character);	
+			//(new AchievementTools()).achievementNormalize(character);	
 			for (int i = 0; i < character.getAchievements().size(); i++)
 				if (character.getAchievements().get(i).getAid() == 116305)
 					System.out.println(character.getAchievements().get(i).getCriteriaQuantity());

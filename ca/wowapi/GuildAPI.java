@@ -3,18 +3,15 @@ package ca.wowapi;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
 import java.net.URL;
 import java.net.URLConnection;
 
-import org.apache.commons.httpclient.URIException;
-import org.apache.commons.httpclient.util.URIUtil;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-
-import com.wowgearup.miner.utils.Constants;
 
 import ca.wowapi.entities.Achievement;
 import ca.wowapi.entities.Guild;
@@ -28,7 +25,7 @@ import ca.wowapi.exceptions.TooManyRequestsException;
 import ca.wowapi.utils.APIConnection;
 
 public class GuildAPI {
-	
+
 	private String cat;
 	private String mouse;
 	private boolean authenticate = false;
@@ -56,8 +53,8 @@ public class GuildAPI {
 	public void setMouse(String mouse) {
 		this.mouse = mouse;
 	}
-	
-	
+
+
 	public GuildAPI (boolean authenticate, String cat, String mouse)
 	{
 		this.authenticate = authenticate;
@@ -92,12 +89,13 @@ public class GuildAPI {
 	public Guild getGuildAllInfo (String name, String realm, String region, long lastModified) throws ServerUnavailableException, GuildNotFoundException, InvalidApplicationSignatureException, TooManyRequestsException, NotModifiedException
 	{
 		String URL = "http://%region.battle.net/api/wow/guild/%realm/%name?fields=achievements";
+
 		try {
-			name = URIUtil.encodePath(name,"UTF-8");
-			realm = URIUtil.encodePath(realm,"UTF-8");
-		} catch (URIException e) {
-			e.printStackTrace();
-		}		
+			name = java.net.URLEncoder.encode(name,"UTF-8");
+			realm = java.net.URLEncoder.encode(realm,"UTF-8");
+		} catch (UnsupportedEncodingException e1) {
+			e1.printStackTrace();
+		}
 		
 		String finalURL = URL.replace("%region", region).replace("%realm", realm).replace("%name", name);
 		Guild guild = new Guild();		
@@ -123,30 +121,25 @@ public class GuildAPI {
 					}
 				}
 			} catch (JSONException e) {};
-			
-			if (region.equalsIgnoreCase("us"))
-				Constants.numberOfAllGuildRequestsUS++;
-			else if (region.equalsIgnoreCase("eu"))
-				Constants.numberOfAllGuildRequestsEU++;
-			
+
 			guild.setName(jsonobject.getString("name"));
 			guild.setRealm(jsonobject.getString("realm"));
 			guild.setRegion(region);
 			guild.setLevel(jsonobject.getInt("level"));
 			guild.setPoints(jsonobject.getInt("achievementPoints"));
 			guild.setLastmodified(new java.sql.Timestamp(jsonobject.getLong("lastModified")));
-			
+
 			if (jsonobject.getInt("side") == 0) guild.setFaction("Alliance"); 
 			else if (jsonobject.getInt("side") == 1) guild.setFaction("Horde"); 
-			
+
 			jarrayAchievementsCompleted = jsonobject.getJSONObject("achievements").getJSONArray("achievementsCompleted");
 			jarrayAchievementsCompletedTimestamp = jsonobject.getJSONObject("achievements").getJSONArray("achievementsCompletedTimestamp");
 			jarrayCriteria = jsonobject.getJSONObject("achievements").getJSONArray("criteria");
 			jarrayCriteriaQuantity = jsonobject.getJSONObject("achievements").getJSONArray("criteriaQuantity");
 			jarrayCriteriaTimestamp = jsonobject.getJSONObject("achievements").getJSONArray("criteriaTimestamp");
-			
+
 			List<Achievement> achievementList = new ArrayList<Achievement>(); 
-			
+
 			for (int i = 0; i < jarrayAchievementsCompleted.length();i++)
 			{
 				Achievement achievemenet = new Achievement();
@@ -157,7 +150,7 @@ public class GuildAPI {
 				achievementList.add(achievemenet);
 			}
 			guild.setAchievements(achievementList);
-			
+
 			achievementList = new ArrayList<Achievement>(); 
 			for (int i = 0; i < jarrayCriteria.length();i++)
 			{
@@ -169,7 +162,7 @@ public class GuildAPI {
 				achievementList.add(achievemenet);
 			}
 			guild.setCriteria(achievementList);
-			
+
 			return guild;
 
 		} catch (JSONException e) {
@@ -177,17 +170,17 @@ public class GuildAPI {
 			return null;
 		}
 	}
-	
+
 	public Guild getGuildBasicInfo (String name, String realm, String region, long lastModified) throws ServerUnavailableException, GuildNotFoundException, InvalidApplicationSignatureException, TooManyRequestsException, NotModifiedException
 	{
 		String URL = "http://%region.battle.net/api/wow/guild/%realm/%name";
 		try {
-			name = URIUtil.encodePath(name,"UTF-8");
-			realm = URIUtil.encodePath(realm,"UTF-8");
-		} catch (URIException e) {
-			e.printStackTrace();
-		}		
-		
+			name = java.net.URLEncoder.encode(name,"UTF-8");
+			realm = java.net.URLEncoder.encode(realm,"UTF-8");
+		} catch (UnsupportedEncodingException e1) {
+			e1.printStackTrace();
+		}	
+
 		String finalURL = URL.replace("%region", region).replace("%realm", realm).replace("%name", name);
 		Guild guild = new Guild();		
 		try {
@@ -211,21 +204,16 @@ public class GuildAPI {
 					}
 				}
 			} catch (JSONException e) {};
-			
-			if (region.equalsIgnoreCase("us"))
-				Constants.numberOfBasicGuildRequestsUS++;
-			else if (region.equalsIgnoreCase("eu"))
-				Constants.numberOfBasicGuildRequestsEU++;
-			
+
 			guild.setName(jsonobject.getString("name"));
 			guild.setRealm(jsonobject.getString("realm"));
 			guild.setRegion(region);
 			guild.setLevel(jsonobject.getInt("level"));
 			guild.setPoints(jsonobject.getInt("achievementPoints"));
-			
+
 			if (jsonobject.getInt("side") == 0) guild.setFaction("Alliance"); 
 			else if (jsonobject.getInt("side") == 1) guild.setFaction("Horde"); 
-			
+
 			return guild;
 
 		} catch (JSONException e) {
