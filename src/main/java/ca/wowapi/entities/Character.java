@@ -1,11 +1,9 @@
 package ca.wowapi.entities;
 
-import java.util.ArrayList;
 import java.util.List;
 
-
 public class Character {
-	
+
 	String name;
 	String cclass;
 	String faction;
@@ -20,9 +18,8 @@ public class Character {
 	int ilvl;
 	List<Achievement> achievements;
 	List<Achievement> criteria;
-	
-	public Character ()
-	{
+
+	public Character() {
 		name = "";
 		cclass = "";
 		faction = "";
@@ -30,15 +27,14 @@ public class Character {
 		race = "";
 		points = 0;
 		level = 0;
-		guildname = "";	
+		guildname = "";
 		realm = "";
 		region = "";
 		lastmodified = null;
 		ilvl = 0;
 		achievements = null;
 	}
-	
-	
+
 	public String getName() {
 		return name;
 	}
@@ -142,7 +138,7 @@ public class Character {
 	public void setAchievements(List<Achievement> achievements) {
 		this.achievements = achievements;
 	}
-	
+
 	public List<Achievement> getCriteria() {
 		return criteria;
 	}
@@ -150,10 +146,10 @@ public class Character {
 	public void setCriteria(List<Achievement> criteria) {
 		this.criteria = criteria;
 	}
-	
-	public String toString ()
-	{
-		return  name + "," + cclass + "," + faction + "," +gender +"," + race +"," + points +"," + level +"," + guildname +"," + realm +"," + region + "," + "," + lastmodified + "," + ilvl + ", " + faction;
+
+	public String toString() {
+		return name + "," + cclass + "," + faction + "," + gender + "," + race + "," + points + "," + level + "," + guildname + "," + realm + "," + region + "," + "," + lastmodified + "," + ilvl
+				+ ", " + faction;
 	}
-	
+
 }
