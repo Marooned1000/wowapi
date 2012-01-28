@@ -1,110 +1,46 @@
 package ca.wowapi;
 
-import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import ca.wowapi.entities.Achievement;
 import ca.wowapi.entities.Guild;
-import ca.wowapi.exceptions.GuildNotFoundException;
-import ca.wowapi.exceptions.InvalidApplicationSignatureException;
-import ca.wowapi.exceptions.NotModifiedException;
-import ca.wowapi.exceptions.ServerUnavailableException;
-import ca.wowapi.exceptions.TooManyRequestsException;
-import ca.wowapi.utils.APIConnection;
 
-public class GuildAPI {
+public class GuildAPI extends AbstractAPI {
 
-	private String publicKey;
-	private String privateKey;
-	private boolean doAuthenticate = false;
-
-	public GuildAPI(boolean doAuthenticate, String publicKey, String privateKey) {
-		this.doAuthenticate = doAuthenticate;
-		this.publicKey = publicKey;
-		this.privateKey = privateKey;
-	}
+	public static final String GUILD_API_URL = "http://%region.battle.net/api/wow/guild/%realm/%name";
 
 	public GuildAPI() {
+
 	}
 
-	public JSONObject getJSONFromRequest(String url, long lastModified) throws NotModifiedException {
-		JSONObject jsonobject;
-
-		String str = null;
-		if (doAuthenticate)
-			str = APIConnection.getStringJSONFromRequestAuth(url, publicKey, privateKey, lastModified);
-		else
-			str = APIConnection.getStringJSONFromRequest(url, lastModified);
-
-		try {
-			jsonobject = new JSONObject(str);
-			return jsonobject;
-		} catch (JSONException e) {
-			// e.printStackTrace();
-			return null;
-		}
+	public GuildAPI(String publicKey, String privateKey) {
+		super(publicKey, privateKey);
 	}
 
-	public Guild getGuildAllInfo(String name, String realm, String region, long lastModified) throws ServerUnavailableException, GuildNotFoundException, InvalidApplicationSignatureException,
-			TooManyRequestsException, NotModifiedException {
-		String URL = "http://%region.battle.net/api/wow/guild/%realm/%name?fields=achievements";
+	public Guild getGuildAllInfo(String name, String realm, String region) {
+		return this.getGuildAllInfo(name, realm, region, 0);
+	}
 
-		try {
-			name = java.net.URLEncoder.encode(name, "UTF-8").replace("+", "%20");
-			realm = java.net.URLEncoder.encode(realm, "UTF-8").replace("+", "%20");
-		} catch (UnsupportedEncodingException e1) {
-			e1.printStackTrace();
-		}
+	public Guild getGuildAllInfo(String name, String realm, String region, long lastModified) {
+		Guild guild = null;
 
-		String finalURL = URL.replace("%region", region).replace("%realm", realm).replace("%name", name);
-		Guild guild = new Guild();
+		String URL = GUILD_API_URL + "?fields=achievements";
+		String finalURL = URL.replace("%region", region).replace("%realm", encode(realm)).replace("%name", encode(name));
 		try {
+			guild = this.getGuildBasicInfo(name, realm, region, lastModified);
+
 			JSONObject jsonobject = getJSONFromRequest(finalURL, lastModified);
-			JSONArray jarrayAchievementsCompleted, jarrayAchievementsCompletedTimestamp, jarrayCriteria, jarrayCriteriaQuantity, jarrayCriteriaTimestamp;
-
-			if (jsonobject == null)
-				throw new ServerUnavailableException();
-			try {
-				if (jsonobject.getString("status").equalsIgnoreCase("nok")) {
-					if (jsonobject.getString("reason").equalsIgnoreCase("Guild not found.")) {
-						throw new GuildNotFoundException();
-					} else if (jsonobject.getString("reason").equalsIgnoreCase("Invalid application signature.")) {
-						throw new InvalidApplicationSignatureException();
-					} else if (jsonobject.getString("reason").contains("too many requests") || jsonobject.getString("reason").contains("Daily limit exceeded")) {
-						throw new TooManyRequestsException();
-					} else {
-						throw new ServerUnavailableException();
-					}
-				}
-			} catch (JSONException e) {
-			}
-			;
-
-			guild.setName(jsonobject.getString("name"));
-			guild.setRealm(jsonobject.getString("realm"));
-			guild.setRegion(region);
-			guild.setLevel(jsonobject.getInt("level"));
-			guild.setPoints(jsonobject.getInt("achievementPoints"));
-			guild.setLastmodified(new java.sql.Timestamp(jsonobject.getLong("lastModified")));
-
-			if (jsonobject.getInt("side") == 0)
-				guild.setFaction("Alliance");
-			else if (jsonobject.getInt("side") == 1)
-				guild.setFaction("Horde");
-
-			jarrayAchievementsCompleted = jsonobject.getJSONObject("achievements").getJSONArray("achievementsCompleted");
-			jarrayAchievementsCompletedTimestamp = jsonobject.getJSONObject("achievements").getJSONArray("achievementsCompletedTimestamp");
-			jarrayCriteria = jsonobject.getJSONObject("achievements").getJSONArray("criteria");
-			jarrayCriteriaQuantity = jsonobject.getJSONObject("achievements").getJSONArray("criteriaQuantity");
-			jarrayCriteriaTimestamp = jsonobject.getJSONObject("achievements").getJSONArray("criteriaTimestamp");
+			JSONArray jarrayAchievementsCompleted = jsonobject.getJSONObject("achievements").getJSONArray("achievementsCompleted");
+			JSONArray jarrayAchievementsCompletedTimestamp = jsonobject.getJSONObject("achievements").getJSONArray("achievementsCompletedTimestamp");
+			JSONArray jarrayCriteria = jsonobject.getJSONObject("achievements").getJSONArray("criteria");
+			JSONArray jarrayCriteriaQuantity = jsonobject.getJSONObject("achievements").getJSONArray("criteriaQuantity");
+			JSONArray jarrayCriteriaTimestamp = jsonobject.getJSONObject("achievements").getJSONArray("criteriaTimestamp");
 
 			List<Achievement> achievementList = new ArrayList<Achievement>();
-
 			for (int i = 0; i < jarrayAchievementsCompleted.length(); i++) {
 				Achievement achievemenet = new Achievement();
 				achievemenet.setAid(jarrayAchievementsCompleted.getInt(i));
@@ -126,63 +62,41 @@ public class GuildAPI {
 			}
 			guild.setCriteria(achievementList);
 
-			return guild;
-
-		} catch (JSONException e) {
+		} catch (Exception e) {
 			e.printStackTrace();
-			return null;
 		}
+
+		return guild;
 	}
 
-	public Guild getGuildBasicInfo(String name, String realm, String region, long lastModified) throws ServerUnavailableException, GuildNotFoundException, InvalidApplicationSignatureException,
-			TooManyRequestsException, NotModifiedException {
-		String URL = "http://%region.battle.net/api/wow/guild/%realm/%name";
-		try {
-			name = java.net.URLEncoder.encode(name, "UTF-8").replace("+", "%20");
-			realm = java.net.URLEncoder.encode(realm, "UTF-8").replace("+", "%20");
-		} catch (UnsupportedEncodingException e1) {
-			e1.printStackTrace();
-		}
+	public Guild getGuildBasicInfo(String name, String realm, String region) {
+		return this.getGuildBasicInfo(name, realm, region, 0);
+	}
 
-		String finalURL = URL.replace("%region", region).replace("%realm", realm).replace("%name", name);
-		Guild guild = new Guild();
+	public Guild getGuildBasicInfo(String name, String realm, String region, long lastModified) {
+		Guild guild = null;
+
+		String finalURL = GUILD_API_URL.replace("%region", region).replace("%realm", encode(realm)).replace("%name", encode(name));
 		try {
 			JSONObject jsonobject = getJSONFromRequest(finalURL, lastModified);
 
-			if (jsonobject == null)
-				throw new ServerUnavailableException();
-			try {
-				if (jsonobject.getString("status").equalsIgnoreCase("nok")) {
-					if (jsonobject.getString("reason").equalsIgnoreCase("Character not found.")) {
-						throw new GuildNotFoundException();
-					} else if (jsonobject.getString("reason").equalsIgnoreCase("Invalid application signature.")) {
-						throw new InvalidApplicationSignatureException();
-					} else if (jsonobject.getString("reason").contains("too many requests") || jsonobject.getString("reason").contains("Daily limit exceeded")) {
-						throw new TooManyRequestsException();
-					} else {
-						throw new ServerUnavailableException();
-					}
-				}
-			} catch (JSONException e) {
-			}
-
+			guild = new Guild();
 			guild.setName(jsonobject.getString("name"));
 			guild.setRealm(jsonobject.getString("realm"));
 			guild.setRegion(region);
 			guild.setLevel(jsonobject.getInt("level"));
 			guild.setPoints(jsonobject.getInt("achievementPoints"));
 
-			if (jsonobject.getInt("side") == 0)
+			if (jsonobject.getInt("side") == 0) {
 				guild.setFaction("Alliance");
-			else if (jsonobject.getInt("side") == 1)
+			} else if (jsonobject.getInt("side") == 1) {
 				guild.setFaction("Horde");
-
-			return guild;
-
-		} catch (JSONException e) {
+			}
+		} catch (Exception e) {
 			e.printStackTrace();
-			return null;
 		}
+
+		return guild;
 	}
 
 }

@@ -1,87 +1,35 @@
 package ca.wowapi;
 
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.Reader;
-import java.net.URL;
-import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import ca.wowapi.entities.Realm;
 
-public class RealmAPI {
+public class RealmAPI extends AbstractAPI {
 
-	String URL = "http://%region.battle.net/api/wow/realm/status";
-	private String region;
+	public static final String REALM_API_URL = "http://%region.battle.net/api/wow/realm/status";
 
 	public RealmAPI() {
-		region = "NotSet";
+
 	}
 
-	public RealmAPI(String _region) {
-		region = _region;
-	}
-
-	public JSONObject getJSONFromRequest(String url) {
-		JSONObject jsonobject;
-
-		String str = null;
-		try {
-			URL jURL = new URL(url);
-			URLConnection urlConnection;
-			urlConnection = jURL.openConnection();
-
-			final char[] buffer = new char[0x1000];
-			StringBuilder out = new StringBuilder();
-			Reader in = new InputStreamReader(urlConnection.getInputStream(), "UTF-8");
-			int read;
-			do {
-				read = in.read(buffer, 0, buffer.length);
-				if (read > 0) {
-					out.append(buffer, 0, read);
-				}
-			} while (read >= 0);
-
-			str = out.toString();
-			in.close();
-		} catch (IOException e1) {
-			e1.printStackTrace();
-		}
-
-		try {
-			jsonobject = new JSONObject(str);
-			return jsonobject;
-		} catch (JSONException e) {
-			e.printStackTrace();
-			return null;
-		}
-	}
-
-	public Realm getRealmByName(String name) {
-		if (region.equals("NotSet")) {
-			System.out.println("Error: Region is not set");
-			return null;
-		}
-		return getRealmByName(name, region);
+	public RealmAPI(String publicKey, String privateKey) {
+		super(publicKey, privateKey);
 	}
 
 	public Realm getRealmByName(String name, String region) {
-		String finalURL = URL.replace("%region", region);
+		String finalURL = REALM_API_URL.replace("%region", region);
 		finalURL += "?realm=" + name;
 
-		JSONObject jsonobject = getJSONFromRequest(finalURL);
-		JSONArray jarray;
-		Realm realm = new Realm();
-
 		try {
-			jarray = jsonobject.getJSONArray("realms");
-
+			JSONObject jsonobject = getJSONFromRequest(finalURL);
+			JSONArray jarray = jsonobject.getJSONArray("realms");
 			jsonobject = jarray.getJSONObject(0);
+
+			Realm realm = new Realm();
 			realm.setName(jsonobject.getString("name"));
 			realm.setPopulation(jsonobject.getString("population"));
 			realm.setType(jsonobject.getString("type"));
@@ -90,33 +38,25 @@ public class RealmAPI {
 			realm.setQueue(jsonobject.getBoolean("queue"));
 
 			return realm;
-
-		} catch (JSONException e) {
+		} catch (Exception e) {
 			e.printStackTrace();
-			return null;
 		}
-	}
-
-	public List<Realm> getRealmList() {
-		if (region.equals("NotSet")) {
-			System.out.println("Error: Region is not set");
-			return null;
-		}
-		return getRealmList(region);
+		return null;
 	}
 
 	public List<Realm> getRealmList(String region) {
-		String finalURL = URL.replace("%region", region);
-		JSONObject jsonobject = getJSONFromRequest(finalURL);
-		JSONArray jarray;
+		String finalURL = REALM_API_URL.replace("%region", region);
+
 		ArrayList<Realm> list = new ArrayList<Realm>();
-
 		try {
-			jarray = jsonobject.getJSONArray("realms");
+			JSONObject jsonobject = getJSONFromRequest(finalURL);
 
+			JSONArray jarray = jsonobject.getJSONArray("realms");
 			for (int i = 0; i < jarray.length(); i++) {
-				Realm realm = new Realm();
+
 				jsonobject = jarray.getJSONObject(i);
+
+				Realm realm = new Realm();
 				realm.setName(jsonobject.getString("name"));
 				realm.setPopulation(jsonobject.getString("population"));
 				realm.setType(jsonobject.getString("type"));
@@ -128,46 +68,30 @@ public class RealmAPI {
 			}
 			return list;
 
-		} catch (JSONException e) {
+		} catch (Exception e) {
 			e.printStackTrace();
-			return null;
 		}
+		return null;
 	}
 
-	public String[] getRealmNamesList() {
-		if (region.equals("NotSet")) {
-			System.out.println("Error: Region is not set");
-			return null;
-		}
-		return getRealmNamesList(region);
-	}
+	public List<String> getRealmNamesList(String region) {
+		String finalURL = REALM_API_URL.replace("%region", region);
 
-	public String[] getRealmNamesList(String region) {
-		String finalURL = URL.replace("%region", region);
-		JSONObject jsonobject = getJSONFromRequest(finalURL);
-		JSONArray jarray;
-
+		ArrayList<String> names = new ArrayList<String>();
 		try {
-			jarray = jsonobject.getJSONArray("realms");
-			String[] res = new String[jarray.length()];
+
+			JSONObject jsonobject = getJSONFromRequest(finalURL);
+			JSONArray jarray = jsonobject.getJSONArray("realms");
 			for (int i = 0; i < jarray.length(); i++) {
 				jsonobject = jarray.getJSONObject(i);
-				res[i] = jsonobject.getString("name");
+				names.add(jsonobject.getString("name"));
 			}
-			return res;
 
-		} catch (JSONException e) {
+			return names;
+		} catch (Exception e) {
 			e.printStackTrace();
 			return null;
 		}
-	}
-
-	public void setRegion(String _region) {
-		region = _region;
-	}
-
-	public String getRegion() {
-		return region;
 	}
 
 }

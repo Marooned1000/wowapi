@@ -1,134 +1,82 @@
 package ca.wowapi;
 
-import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import ca.wowapi.entities.Achievement;
 import ca.wowapi.entities.Character;
-import ca.wowapi.exceptions.CharacterNotFoundException;
-import ca.wowapi.exceptions.InvalidApplicationSignatureException;
-import ca.wowapi.exceptions.NotModifiedException;
-import ca.wowapi.exceptions.ServerUnavailableException;
-import ca.wowapi.exceptions.TooManyRequestsException;
-import ca.wowapi.utils.APIConnection;
 
-public class CharacterAPI {
+public class CharacterAPI extends AbstractAPI {
 
-	private boolean doAuthenticate = false;
-	private String privateKey;
-	private String publicKey;
+	private static final Map<Integer, String> CLASS_LIST;
+	private static final Map<Integer, String> RACE_LIST;
+	private static final Map<Integer, String> GENDER_LIST;
+	static {
+		CLASS_LIST = new HashMap<Integer, String>();
+		CLASS_LIST.put(1, "Warrior");
+		CLASS_LIST.put(2, "Paladin");
+		CLASS_LIST.put(3, "Hunter");
+		CLASS_LIST.put(4, "Rogue");
+		CLASS_LIST.put(5, "Priest");
+		CLASS_LIST.put(6, "Death Knight");
+		CLASS_LIST.put(7, "Shaman");
+		CLASS_LIST.put(8, "Mage");
+		CLASS_LIST.put(9, "Warlock");
+		CLASS_LIST.put(11, "Druid");
+
+		RACE_LIST = new HashMap<Integer, String>();
+		RACE_LIST.put(1, "Human");
+		RACE_LIST.put(2, "Orc");
+		RACE_LIST.put(3, "Dwarf");
+		RACE_LIST.put(4, "Night Elf");
+		RACE_LIST.put(5, "Undead");
+		RACE_LIST.put(6, "Tauren");
+		RACE_LIST.put(7, "Gnome");
+		RACE_LIST.put(8, "Troll");
+		RACE_LIST.put(9, "Goblin");
+		RACE_LIST.put(10, "Blood Elf");
+		RACE_LIST.put(11, "Draenei");
+		RACE_LIST.put(22, "Worgen");
+
+		GENDER_LIST = new HashMap<Integer, String>();
+		GENDER_LIST.put(0, "Male");
+		GENDER_LIST.put(1, "Female");
+	}
+
+	public static final String CHARACTER_API_URL = "http://%region.battle.net/api/wow/character/%realm/%name";
 
 	public CharacterAPI() {
 	}
 
-	public CharacterAPI(boolean doAuthenticate, String publicKey, String privateKey) {
-		this.doAuthenticate = doAuthenticate;
-		this.publicKey = publicKey;
-		this.privateKey = privateKey;
+	public CharacterAPI(String publicKey, String privateKey) {
+		super(publicKey, privateKey);
 	}
 
-	public Character getCharacterAllInfo(String name, String realm, String region, long lastModified) throws CharacterNotFoundException, ServerUnavailableException,
-			InvalidApplicationSignatureException, TooManyRequestsException, NotModifiedException {
-		String URL = "http://%region.battle.net/api/wow/character/%realm/%name?fields=items,guild,achievements";
+	public Character getCharacterAllInfo(String name, String realm, String region) {
+		return this.getCharacterAllInfo(name, realm, region, 0);
+	}
 
-		Map<Integer, String> classList = new HashMap<Integer, String>();
-		classList.put(11, "Druid");
-		classList.put(7, "Shaman");
-		classList.put(2, "Paladin");
-		classList.put(6, "Death Knight");
-		classList.put(4, "Rogue");
-		classList.put(5, "Priest");
-		classList.put(8, "Mage");
-		classList.put(1, "Warrior");
-		classList.put(9, "Warlock");
-		classList.put(3, "Hunter");
+	public Character getCharacterAllInfo(String name, String realm, String region, long lastModified) {
+		Character character = null;
 
-		Map<Integer, String> raceList = new HashMap<Integer, String>();
-		raceList.put(4, "Night Elf");
-		raceList.put(11, "Draenei");
-		raceList.put(1, "Human");
-		raceList.put(3, "Dwarf");
-		raceList.put(6, "Tauren");
-		raceList.put(10, "Blood Elf");
-		raceList.put(22, "Worgen");
-		raceList.put(7, "Gnome");
-		raceList.put(9, "Goblin");
-		raceList.put(2, "Orc");
-		raceList.put(8, "Troll");
-		raceList.put(5, "Undead");
-
-		Map<Integer, String> genderList = new HashMap<Integer, String>();
-		genderList.put(0, "Male");
-		genderList.put(1, "Female");
-
-		try {
-			name = java.net.URLEncoder.encode(name, "UTF-8").replace("+", "%20");
-			realm = java.net.URLEncoder.encode(realm, "UTF-8").replace("+", "%20");
-		} catch (UnsupportedEncodingException e1) {
-			e1.printStackTrace();
-		}
-
-		String finalURL = URL.replace("%region", region).replace("%realm", realm).replace("%name", name);
-		Character character = new Character();
+		String URL = CHARACTER_API_URL + "?fields=items,guild,achievements";
+		String finalURL = URL.replace("%region", region).replace("%realm", encode(realm)).replace("%name", encode(name));
 		try {
 			JSONObject jsonobject = getJSONFromRequest(finalURL, lastModified);
-			JSONArray jarrayAchievementsCompleted, jarrayAchievementsCompletedTimestamp, jarrayCriteria, jarrayCriteriaQuantity, jarrayCriteriaTimestamp;
-			if (jsonobject == null)
-				throw new ServerUnavailableException();
-			try {
-				if (jsonobject.getString("status").equalsIgnoreCase("nok")) {
-					if (jsonobject.getString("reason").equalsIgnoreCase("Character not found.")) {
-						throw new CharacterNotFoundException();
-					} else if (jsonobject.getString("reason").equalsIgnoreCase("Invalid application signature.")) {
-						throw new InvalidApplicationSignatureException();
-					} else if (jsonobject.getString("reason").contains("too many requests") || jsonobject.getString("reason").contains("Daily limit exceeded")) {
-						throw new TooManyRequestsException();
-					} else {
-						throw new ServerUnavailableException();
-					}
-				}
-			} catch (JSONException e) {
-			}
 
-			character.setName(jsonobject.getString("name"));
-			character.setRealm(jsonobject.getString("realm"));
-			character.setRegion(region);
-			character.setCclass(classList.get(jsonobject.getInt("class")));
-			character.setRace(raceList.get(jsonobject.getInt("race")));
-			character.setLevel(jsonobject.getInt("level"));
-			character.setPoints(jsonobject.getInt("achievementPoints"));
-			character.setIlvl(jsonobject.getJSONObject("items").getInt("averageItemLevel"));
-			character.setGender(genderList.get(jsonobject.getInt("gender")));
-			try {
-				character.setGuildname(jsonobject.getJSONObject("guild").getString("name"));
-			} catch (JSONException e) {
-				character.setGuildname("");
-			}
-
-			if (jsonobject.getInt("race") == 4 || jsonobject.getInt("race") == 11 || jsonobject.getInt("race") == 1 || jsonobject.getInt("race") == 3 || jsonobject.getInt("race") == 7
-					|| jsonobject.getInt("race") == 22)
-				character.setFaction("Alliance");
-			else if (jsonobject.getInt("race") == 6 || jsonobject.getInt("race") == 10 || jsonobject.getInt("race") == 9 || jsonobject.getInt("race") == 2 || jsonobject.getInt("race") == 5
-					|| jsonobject.getInt("race") == 8)
-				character.setFaction("Horde");
-			else
-				character.setFaction("");
-
-			jarrayAchievementsCompleted = jsonobject.getJSONObject("achievements").getJSONArray("achievementsCompleted");
-			jarrayAchievementsCompletedTimestamp = jsonobject.getJSONObject("achievements").getJSONArray("achievementsCompletedTimestamp");
-			jarrayCriteria = jsonobject.getJSONObject("achievements").getJSONArray("criteria");
-			jarrayCriteriaQuantity = jsonobject.getJSONObject("achievements").getJSONArray("criteriaQuantity");
-			jarrayCriteriaTimestamp = jsonobject.getJSONObject("achievements").getJSONArray("criteriaTimestamp");
+			character = this.getCharacterBasicInfo(name, realm, region);
+			JSONArray jarrayAchievementsCompleted = jsonobject.getJSONObject("achievements").getJSONArray("achievementsCompleted");
+			JSONArray jarrayAchievementsCompletedTimestamp = jsonobject.getJSONObject("achievements").getJSONArray("achievementsCompletedTimestamp");
+			JSONArray jarrayCriteria = jsonobject.getJSONObject("achievements").getJSONArray("criteria");
+			JSONArray jarrayCriteriaQuantity = jsonobject.getJSONObject("achievements").getJSONArray("criteriaQuantity");
+			JSONArray jarrayCriteriaTimestamp = jsonobject.getJSONObject("achievements").getJSONArray("criteriaTimestamp");
 
 			List<Achievement> achievementList = new ArrayList<Achievement>();
-
 			for (int i = 0; i < jarrayAchievementsCompleted.length(); i++) {
 				Achievement achievemenet = new Achievement();
 				achievemenet.setAid(jarrayAchievementsCompleted.getInt(i));
@@ -141,162 +89,58 @@ public class CharacterAPI {
 
 			achievementList = new ArrayList<Achievement>();
 			for (int i = 0; i < jarrayCriteria.length(); i++) {
-				/*
-				 * Achievement achievemenet = null; boolean isOld = false; for
-				 * (int z = 0; z < jarrayAchievementsCompleted.length();z++) {
-				 * if (achievementList.get(z).getAid() ==
-				 * jarrayCriteria.getInt(i)) { achievemenet =
-				 * achievementList.get(z); isOld = true; break; } achievemenet =
-				 * new Achievement(); } if (isOld) {
-				 * System.out.println(achievemenet.getAid());
-				 * System.out.println(achievemenet.getTimestamp());
-				 * System.out.println(jarrayCriteriaTimestamp.getLong(i));
-				 * System.out.println(jarrayCriteriaQuantity.getInt(i)); }
-				 */
-
 				Achievement achievemenet = new Achievement();
 				achievemenet.setAid(jarrayCriteria.getInt(i));
 				achievemenet.setTimestamp(jarrayCriteriaTimestamp.getLong(i));
 				achievemenet.setCriteriaQuantity(jarrayCriteriaQuantity.getLong(i));
 				achievemenet.setCompleted(false);
 				achievementList.add(achievemenet);
-
-				// System.out.println(jarrayCriteria.getInt(i) + ":" +
-				// jarrayCriteriaQuantity.getInt(i));
-
-				/*
-				 * try { BufferedWriter bufferedWriter = new BufferedWriter(new
-				 * FileWriter("crsader-criteria.txt",true));
-				 * bufferedWriter.write("ID: " + jarrayCriteria.getInt(i) +
-				 * ", criteria: " + jarrayCriteriaQuantity.getInt(i) +
-				 * ", datetime: " + new
-				 * java.util.Date(jarrayCriteriaTimestamp.getLong(i)));
-				 * bufferedWriter.newLine(); bufferedWriter.close(); } catch
-				 * (IOException ex) { ex.printStackTrace(); }
-				 * System.out.println("ID: " + jarrayCriteria.getInt(i) +
-				 * ", criteria: " + jarrayCriteriaQuantity.getInt(i) +
-				 * ", datetime: " + new
-				 * java.util.Date(jarrayCriteriaTimestamp.getLong(i)));
-				 */
 			}
-
 			character.setCriteria(achievementList);
-			return character;
-		} catch (JSONException e) {
+
+		} catch (Exception e) {
 			e.printStackTrace();
-			return null;
 		}
+		return character;
 	}
 
-	public Character getCharacterBasicInfo(String name, String realm, String region, long lastModified) throws CharacterNotFoundException, ServerUnavailableException,
-			InvalidApplicationSignatureException, TooManyRequestsException, NotModifiedException {
+	public Character getCharacterBasicInfo(String name, String realm, String region) {
+		return this.getCharacterBasicInfo(name, realm, region, 0);
+	}
 
-		String URL = "http://%region.battle.net/api/wow/character/%realm/%name";
+	public Character getCharacterBasicInfo(String name, String realm, String region, long lastModified) {
+		Character character = null;
 
-		Map<Integer, String> classList = new HashMap<Integer, String>();
-		classList.put(11, "Druid");
-		classList.put(7, "Shaman");
-		classList.put(2, "Paladin");
-		classList.put(6, "Death Knight");
-		classList.put(4, "Rogue");
-		classList.put(5, "Priest");
-		classList.put(8, "Mage");
-		classList.put(1, "Warrior");
-		classList.put(9, "Warlock");
-		classList.put(3, "Hunter");
-
-		Map<Integer, String> raceList = new HashMap<Integer, String>();
-		raceList.put(4, "Night Elf");
-		raceList.put(11, "Draenei");
-		raceList.put(1, "Human");
-		raceList.put(3, "Dwarf");
-		raceList.put(6, "Tauren");
-		raceList.put(10, "Blood Elf");
-		raceList.put(22, "Worgen");
-		raceList.put(7, "Gnome");
-		raceList.put(9, "Goblin");
-		raceList.put(2, "Orc");
-		raceList.put(8, "Troll");
-		raceList.put(5, "Undead");
-
-		Map<Integer, String> genderList = new HashMap<Integer, String>();
-		genderList.put(0, "Male");
-		genderList.put(1, "Female");
-
-		try {
-			name = java.net.URLEncoder.encode(name, "UTF-8").replace("+", "%20");
-			realm = java.net.URLEncoder.encode(realm, "UTF-8").replace("+", "%20");
-		} catch (UnsupportedEncodingException e1) {
-			e1.printStackTrace();
-		}
-
-		String finalURL = URL.replace("%region", region).replace("%realm", realm).replace("%name", name);
-		Character character = new Character();
+		String finalURL = CHARACTER_API_URL.replace("%region", region).replace("%realm", encode(realm)).replace("%name", encode(name));
 		try {
 			JSONObject jsonobject = getJSONFromRequest(finalURL, lastModified);
-			if (jsonobject == null)
-				throw new ServerUnavailableException();
-			try {
-				if (jsonobject.getString("status").equalsIgnoreCase("nok")) {
-					if (jsonobject.getString("reason").equalsIgnoreCase("Character not found.")) {
-						throw new CharacterNotFoundException();
-					} else if (jsonobject.getString("reason").equalsIgnoreCase("Invalid application signature.")) {
-						throw new InvalidApplicationSignatureException();
-					} else if (jsonobject.getString("reason").contains("too many requests") || jsonobject.getString("reason").contains("Daily limit exceeded")) {
-						throw new TooManyRequestsException();
-					} else {
-						throw new ServerUnavailableException();
-					}
-				}
-			} catch (JSONException e) {
-			}
 
+			character = new Character();
 			character.setName(jsonobject.getString("name"));
 			character.setRealm(jsonobject.getString("realm"));
 			character.setRegion(region);
-			character.setCclass(classList.get(jsonobject.getInt("class")));
-			character.setRace(raceList.get(jsonobject.getInt("race")));
+			character.setCclass(CLASS_LIST.get(jsonobject.getInt("class")));
+			character.setRace(RACE_LIST.get(jsonobject.getInt("race")));
 			character.setLevel(jsonobject.getInt("level"));
 			character.setPoints(jsonobject.getInt("achievementPoints"));
-			character.setGender(genderList.get(jsonobject.getInt("gender")));
-			try {
+			character.setGender(GENDER_LIST.get(jsonobject.getInt("gender")));
+			if (jsonobject.has("guild")) {
 				character.setGuildname(jsonobject.getJSONObject("guild").getString("name"));
-			} catch (JSONException e) {
-				character.setGuildname("");
 			}
 
 			if (jsonobject.getInt("race") == 4 || jsonobject.getInt("race") == 11 || jsonobject.getInt("race") == 1 || jsonobject.getInt("race") == 3 || jsonobject.getInt("race") == 7
-					|| jsonobject.getInt("race") == 22)
+					|| jsonobject.getInt("race") == 22) {
 				character.setFaction("Alliance");
-			else if (jsonobject.getInt("race") == 6 || jsonobject.getInt("race") == 10 || jsonobject.getInt("race") == 9 || jsonobject.getInt("race") == 2 || jsonobject.getInt("race") == 5
-					|| jsonobject.getInt("race") == 8)
+			} else if (jsonobject.getInt("race") == 6 || jsonobject.getInt("race") == 10 || jsonobject.getInt("race") == 9 || jsonobject.getInt("race") == 2 || jsonobject.getInt("race") == 5
+					|| jsonobject.getInt("race") == 8) {
 				character.setFaction("Horde");
-			else
-				character.setFaction("");
+			}
 
-			return character;
-		} catch (JSONException e) {
+		} catch (Exception e) {
 			e.printStackTrace();
-			return null;
 		}
-	}
 
-	public JSONObject getJSONFromRequest(String url, long lastModified) throws NotModifiedException {
-		JSONObject jsonobject;
-
-		String str = null;
-		if (doAuthenticate)
-			str = APIConnection.getStringJSONFromRequestAuth(url, publicKey, privateKey, lastModified);
-		else
-			str = APIConnection.getStringJSONFromRequest(url, lastModified);
-
-		try {
-			jsonobject = new JSONObject(str);
-			return jsonobject;
-		} catch (JSONException e) {
-			e.printStackTrace();
-			return null;
-		}
+		return character;
 	}
 
 }

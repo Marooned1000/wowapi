@@ -16,6 +16,16 @@ import ca.wowapi.exceptions.NotModifiedException;
 
 public class APIConnection {
 
+	public static String getStringJSONFromRequest(String url) {
+		String string = null;
+		try {
+			string = getStringJSONFromRequest(url, 0);
+		} catch (NotModifiedException e) {
+			// won't happen since we aren't passing the lastModified time
+		}
+		return string;
+	}
+
 	public static String getStringJSONFromRequest(String url, long lastModified) throws NotModifiedException {
 
 		String str = null;
@@ -33,6 +43,16 @@ public class APIConnection {
 			e1.printStackTrace();
 		}
 		return str;
+	}
+
+	public static String getStringJSONFromRequestAuth(String url, String publicKey, String privateKey) {
+		String string = null;
+		try {
+			string = getStringJSONFromRequestAuth(url, publicKey, privateKey, 0);
+		} catch (NotModifiedException e) {
+			// won't happen since we aren't passing the lastModified time
+		}
+		return string;
 	}
 
 	public static String getStringJSONFromRequestAuth(String url, String publicKey, String privateKey, long lastModified) throws NotModifiedException {
@@ -61,8 +81,10 @@ public class APIConnection {
 			try {
 				urlConnection.setRequestProperty("Authorization", "BNET" + " " + publicKey + ":" + sig);
 				urlConnection.setRequestProperty("Date", dateStr);
-				if (lastModified != 0)
+
+				if (lastModified != 0) {
 					urlConnection.setIfModifiedSince(lastModified);
+				}
 			} catch (IllegalStateException e) {
 				e.printStackTrace();
 			}
