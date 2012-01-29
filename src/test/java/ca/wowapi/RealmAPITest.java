@@ -20,7 +20,7 @@ public class RealmAPITest {
 
 	@Test
 	public void getRealmByNameTest() {
-		Realm r = realmAPI.getRealmByName("Ravencrest", RealmAPI.REGION_US);
+		Realm r = realmAPI.getRealm("Ravencrest", RealmAPI.REGION_US);
 		Assert.assertNotNull(r);
 		Assert.assertEquals("Ravencrest", r.getName());
 	}

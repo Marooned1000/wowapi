@@ -15,16 +15,10 @@ public class Guild implements Serializable {
 	String faction;
 	List<Achievement> achievements;
 	List<Achievement> criteria;
-	java.sql.Timestamp lastmodified;
+	long lastmodified;
 
 	public Guild() {
-		name = "";
-		realm = "";
-		region = "";
-		faction = "";
-		points = 0;
-		level = 0;
-		lastmodified = null;
+
 	}
 
 	public String getName() {
@@ -83,11 +77,11 @@ public class Guild implements Serializable {
 		this.achievements = achievements;
 	}
 
-	public java.sql.Timestamp getLastmodified() {
+	public long getLastmodified() {
 		return lastmodified;
 	}
 
-	public void setLastmodified(java.sql.Timestamp lastmodified) {
+	public void setLastmodified(long lastmodified) {
 		this.lastmodified = lastmodified;
 	}
 
@@ -100,6 +94,19 @@ public class Guild implements Serializable {
 	}
 
 	public String toString() {
-		return name + "," + realm + "," + region + "," + points + "," + level + "," + faction + "," + lastmodified;
+		StringBuffer output = new StringBuffer();
+		output.append("name: " + name + "\n");
+		output.append("realm: " + realm + "\n");
+		output.append("region: " + region + "\n");
+		output.append("points: " + points + "\n");
+		output.append("level: " + level + "\n");
+		output.append("faction: " + faction + "\n");
+		if (null != achievements) {
+			output.append("achievements: " + achievements + "\n");
+		}
+		if (null != criteria) {
+			output.append("criteria: " + criteria + "\n");
+		}
+		return output.toString();
 	}
 }

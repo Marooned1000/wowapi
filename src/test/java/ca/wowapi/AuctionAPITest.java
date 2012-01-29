@@ -10,6 +10,8 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import ca.wowapi.entities.Auction;
+
 public class AuctionAPITest {
 
 	private static final String TEST_REALM = "Ravencrest";
@@ -43,7 +45,7 @@ public class AuctionAPITest {
 
 	@Test
 	public void getAllAuctionDataTest() {
-		HashMap<String, List<AuctionItem>> auctionData = auctionAPI.getAllAuctionData(TEST_REALM, AuctionAPI.REGION_US);
+		HashMap<String, List<Auction>> auctionData = auctionAPI.getAllAuctionData(TEST_REALM, AuctionAPI.REGION_US);
 		Assert.assertNotNull(auctionData.get(TEST_FACTION));
 		Assert.assertNotNull(auctionData.get(TEST_FACTION).get(0));
 	}

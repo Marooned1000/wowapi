@@ -7,6 +7,8 @@ import java.util.List;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import ca.wowapi.entities.Auction;
+
 public class AuctionAPI extends AbstractAPI {
 
 	public static final String AUCTION_API_URL = "http://%region.battle.net/api/wow/auction/data/%realm";
@@ -49,47 +51,34 @@ public class AuctionAPI extends AbstractAPI {
 		return lastModified;
 	}
 
-	public HashMap<String, List<AuctionItem>> getAllAuctionData(String realm, String region) {
-		HashMap<String, List<AuctionItem>> auctionData = null;
+	public HashMap<String, List<Auction>> getAllAuctionData(String realm, String region) {
+		HashMap<String, List<Auction>> auctionData = null;
 		try {
 			String auctionUrl = this.getAuctionUrl(realm, region);
 			JSONObject jsonobject = getJSONFromRequest(auctionUrl);
 
-			auctionData = new HashMap<String, List<AuctionItem>>();
+			auctionData = new HashMap<String, List<Auction>>();
 			for (int i = 0; i < FACTIONS.length; i++) {
 				JSONArray jAuctionList = jsonobject.getJSONObject(FACTIONS[i]).getJSONArray("auctions");
 
-				ArrayList<AuctionItem> auctionItemList = new ArrayList<AuctionItem>();
+				ArrayList<Auction> auctionList = new ArrayList<Auction>();
 				for (int j = 0; j < jAuctionList.length(); j++) {
-					AuctionItem auctionItem = new AuctionItem();
-					auctionItem.owner = jAuctionList.getJSONObject(j).getString("owner");
-					auctionItem.bid = jAuctionList.getJSONObject(j).getLong("bid");
-					auctionItem.id = jAuctionList.getJSONObject(j).getLong("auc");
-					auctionItem.item = jAuctionList.getJSONObject(j).getInt("item");
-					auctionItem.buyout = jAuctionList.getJSONObject(j).getLong("buyout");
-					auctionItem.quantity = jAuctionList.getJSONObject(j).getInt("quantity");
-					auctionItem.timeLeft = jAuctionList.getJSONObject(j).getString("timeLeft");
-					auctionItemList.add(auctionItem);
+					Auction auctionItem = new Auction();
+					auctionItem.setOwner(jAuctionList.getJSONObject(j).getString("owner"));
+					auctionItem.setBid(jAuctionList.getJSONObject(j).getLong("bid"));
+					auctionItem.setId(jAuctionList.getJSONObject(j).getLong("auc"));
+					auctionItem.setItem(jAuctionList.getJSONObject(j).getInt("item"));
+					auctionItem.setBuyout(jAuctionList.getJSONObject(j).getLong("buyout"));
+					auctionItem.setQuantity(jAuctionList.getJSONObject(j).getInt("quantity"));
+					auctionItem.setTimeLeft(jAuctionList.getJSONObject(j).getString("timeLeft"));
+					auctionList.add(auctionItem);
 				}
-				auctionData.put(FACTIONS[i], auctionItemList);
+				auctionData.put(FACTIONS[i], auctionList);
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 		return auctionData;
 	}
-}
 
-class AuctionItem {
-	public long bid;
-	public long buyout;
-	public long id;
-	public int item;
-	public String owner;
-	public int quantity;
-	public String timeLeft;
-
-	public String toString() {
-		return id + ", " + item + ", \t" + owner + ", \t" + bid / 10000 + ", \t" + buyout / 10000 + ", \t" + quantity + ", \t" + timeLeft;
-	}
 }

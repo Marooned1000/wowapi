@@ -15,12 +15,12 @@ public class RealmAPI extends AbstractAPI {
 	public RealmAPI() {
 
 	}
-
+	
 	public RealmAPI(String publicKey, String privateKey) {
 		super(publicKey, privateKey);
 	}
 
-	public Realm getRealmByName(String name, String region) {
+	public Realm getRealm(String name, String region) {
 		String finalURL = REALM_API_URL.replace("%region", region);
 		finalURL += "?realm=" + name;
 

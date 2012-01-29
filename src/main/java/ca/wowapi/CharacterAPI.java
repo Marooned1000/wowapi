@@ -125,7 +125,7 @@ public class CharacterAPI extends AbstractAPI {
 			character.setPoints(jsonobject.getInt("achievementPoints"));
 			character.setGender(GENDER_LIST.get(jsonobject.getInt("gender")));
 			if (jsonobject.has("guild")) {
-				character.setGuildname(jsonobject.getJSONObject("guild").getString("name"));
+				character.setGuildName(jsonobject.getJSONObject("guild").getString("name"));
 			}
 
 			if (jsonobject.getInt("race") == 4 || jsonobject.getInt("race") == 11 || jsonobject.getInt("race") == 1 || jsonobject.getInt("race") == 3 || jsonobject.getInt("race") == 7
