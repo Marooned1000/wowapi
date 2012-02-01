@@ -1,0 +1,22 @@
+#OS junk files
+[Tt]humbs.db
+*.DS_Store
+
+
+#Tooling
+_ReSharper*/
+*.resharper
+[Tt]est[Rr]esult*
+
+
+#Project files
+[Bb]uild/
+target/
+
+
+#Subversion files
+.svn
+
+
+# Office Temp Files
+~$*
