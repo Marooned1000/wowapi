@@ -1,5 +1,8 @@
 package ca.wowapi.entities;
 
+/**
+ *  Test comment for commit
+ */
 public class Achievement {
 
 	int aid;
